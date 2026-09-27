@@ -101,7 +101,9 @@ export async function runAgent(instruction: string): Promise<{ reply: string; st
       model: config.servModel,
       messages,
       tools,
-      reasoning_effort: "low",
+      // SERV rejects reasoning_effort + function tools together on /v1/chat/completions for this
+      // model ("use /v1/responses or set reasoning_effort to 'none'") — this loop needs tool
+      // calling, so omit it here rather than switch endpoints.
       max_completion_tokens: 600,
     } as ChatCompletionCreateParamsNonStreaming);
     const msg = res.choices[0]?.message;
