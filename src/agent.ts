@@ -1,5 +1,10 @@
 import { AgentKit, customActionProvider, type Action } from "@coinbase/agentkit";
 import OpenAI from "openai";
+import type {
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionMessageParam,
+  ChatCompletionTool,
+} from "openai/resources/chat/completions";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { config } from "./config.js";
@@ -76,14 +81,14 @@ export interface AgentStep {
 export async function runAgent(instruction: string): Promise<{ reply: string; steps: AgentStep[] }> {
   const actions = (await agentKit()).getActions();
   const byName = new Map<string, Action>(actions.map((a) => [a.name, a]));
-  const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  const tools: ChatCompletionTool[] = [
     ...actions.map((a) => ({
       type: "function" as const,
       function: { name: a.name, description: a.description, parameters: zodToJsonSchema(a.schema) as Record<string, unknown> },
     })),
-    { type: "function", function: { name: "serv_prompt_guard" } } as OpenAI.Chat.Completions.ChatCompletionTool,
+    { type: "function", function: { name: "serv_prompt_guard" } } as ChatCompletionTool,
   ];
-  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: AGENT_SYSTEM },
     { role: "user", content: instruction.slice(0, 2000) },
   ];
@@ -96,7 +101,7 @@ export async function runAgent(instruction: string): Promise<{ reply: string; st
       tools,
       reasoning_effort: "low",
       max_completion_tokens: 600,
-    } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+    } as ChatCompletionCreateParamsNonStreaming);
     const msg = res.choices[0]?.message;
     if (!msg) break;
     const calls = (msg.tool_calls ?? []).filter((c) => c.type === "function");

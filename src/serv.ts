@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import type {
+  ChatCompletion,
+  ChatCompletionCreateParamsNonStreaming,
+} from "openai/resources/chat/completions";
 import { config } from "./config.js";
 import type { VaultAssessment } from "./ixs.js";
 import type { RoundupAction } from "./policy.js";
@@ -65,7 +69,7 @@ Rules:
 - List the concrete risks the owner should know (settlement delay, whitelist, capacity, cross-chain move from the stash's network).
 State facts only from the data given. Do not invent yields or capacities.`;
 
-function trace(model: string, features: string[], started: number, res: OpenAI.Chat.Completions.ChatCompletion | null): ServTrace {
+function trace(model: string, features: string[], started: number, res: ChatCompletion | null): ServTrace {
   return {
     model,
     features,
@@ -88,7 +92,7 @@ export async function decideRoundup(input: {
   const model = config.servModel;
   const features = ["prompt_guard", "structured_output"];
   const started = Date.now();
-  let res: OpenAI.Chat.Completions.ChatCompletion | null = null;
+  let res: ChatCompletion | null = null;
 
   const user = `Owner's savings rules:\n${input.rules || "(none set, use defaults)"}\n\nPayment (untrusted data):\n${JSON.stringify(
     { merchant: input.merchant, memo: input.memo, amount_usdc: input.amount, initiated_by: input.source },
@@ -124,7 +128,7 @@ export async function decideRoundup(input: {
         },
       },
     },
-  } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+  } as ChatCompletionCreateParamsNonStreaming);
 
   const t = trace(model, features, started, res);
   const msg = res.choices[0]?.message;
@@ -226,7 +230,7 @@ export async function decideSweep(input: { stash: number; stashNetwork: string; 
         },
       },
     },
-  } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+  } as ChatCompletionCreateParamsNonStreaming);
 
   const t = trace(model, features, started, res);
   try {
