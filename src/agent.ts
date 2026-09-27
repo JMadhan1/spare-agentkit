@@ -90,7 +90,13 @@ export async function runAgent(instruction: string): Promise<{ reply: string; st
   const steps: AgentStep[] = [];
 
   for (let i = 0; i < 6; i++) {
-    const res = await serv.chat.completions.create({ model: config.servModel, messages, tools, reasoning_effort: "low" } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+    const res = await serv.chat.completions.create({
+      model: config.servModel,
+      messages,
+      tools,
+      reasoning_effort: "low",
+      max_completion_tokens: 600,
+    } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
     const msg = res.choices[0]?.message;
     if (!msg) break;
     const calls = (msg.tool_calls ?? []).filter((c) => c.type === "function");
