@@ -86,3 +86,9 @@ app.get("/api/stream", (req, res) => {
     engine.off("update", onUpdate);
   });
 });
+
+// Vercel's "Express" zero-config framework detection independently tries to wire up src/app
+// itself as a handler (separately from our own api/index.ts + vercel.json rewrite), and needs a
+// default export to do it — without one it crashes every request to "/" specifically with
+// "Invalid export found in module src/app.js. The default export must be a function or server."
+export default app;
