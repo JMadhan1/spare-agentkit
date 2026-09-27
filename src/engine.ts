@@ -1,5 +1,7 @@
 import { EventEmitter } from "node:events";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { isAddress } from "viem";
 import { config } from "./config.js";
 import { assessVaults, type VaultAssessment } from "./ixs.js";
@@ -49,7 +51,10 @@ interface State {
   sweeps: SweepRecord[];
 }
 
-const DATA = "data/state.json";
+// Vercel's deployed filesystem is read-only outside os.tmpdir(), and even /tmp is wiped between
+// cold starts — state there is a best-effort cache for one warm instance, not durable storage.
+const DATA_DIR = process.env.VERCEL ? tmpdir() : "data";
+const DATA = path.join(DATA_DIR, "state.json");
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const DEFAULT_RULES = `Round up every payment my agent makes for AI inference, data APIs and compute.
@@ -69,8 +74,12 @@ class Engine extends EventEmitter {
   private sweeping = false;
 
   private save() {
-    mkdirSync("data", { recursive: true });
-    writeFileSync(DATA, JSON.stringify(this.state, null, 2));
+    try {
+      mkdirSync(DATA_DIR, { recursive: true });
+      writeFileSync(DATA, JSON.stringify(this.state, null, 2));
+    } catch {
+      // Best-effort persistence only; in-memory state still serves the current instance.
+    }
   }
 
   private emitUpdate(kind: string, record: PaymentRecord | SweepRecord) {

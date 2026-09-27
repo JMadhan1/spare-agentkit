@@ -146,3 +146,6 @@ stream.onmessage = () => {
 loadStatus();
 loadFeeds();
 setInterval(loadStatus, 15000);
+// SSE is a latency optimization; on a serverless host each connection gets cut at the function's
+// max duration, so poll the feeds too — this is what keeps the view correct there.
+setInterval(loadFeeds, 6000);
