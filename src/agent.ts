@@ -1,8 +1,10 @@
 import { AgentKit, customActionProvider, type Action } from "@coinbase/agentkit";
-import OpenAI from "openai";
+// Named import, not default: see the comment in serv.ts for why.
+import { OpenAI } from "openai";
 import type {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from "openai/resources/chat/completions";
 import { z } from "zod";
@@ -104,7 +106,7 @@ export async function runAgent(instruction: string): Promise<{ reply: string; st
     } as ChatCompletionCreateParamsNonStreaming);
     const msg = res.choices[0]?.message;
     if (!msg) break;
-    const calls = (msg.tool_calls ?? []).filter((c) => c.type === "function");
+    const calls = (msg.tool_calls ?? []).filter((c: ChatCompletionMessageToolCall) => c.type === "function");
     if (calls.length === 0) return { reply: msg.content || msg.refusal || "(no reply)", steps };
     messages.push(msg);
     for (const call of calls) {

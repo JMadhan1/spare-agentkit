@@ -1,4 +1,7 @@
-import OpenAI from "openai";
+// Named import, not default: the default export's construct signature was observed to resolve
+// differently between local (NodeNext) and Vercel's build TypeScript resolution — the named
+// export is unambiguous under both.
+import { OpenAI } from "openai";
 import type {
   ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
