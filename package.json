@@ -2,7 +2,7 @@
   "name": "spare",
   "version": "1.0.0",
   "description": "Round-up savings for the agent economy",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
